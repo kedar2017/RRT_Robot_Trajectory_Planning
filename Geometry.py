@@ -61,7 +61,7 @@ class Tree:
         +pow(node.point.posZ-randomNode.point.posZ,2))
     
     def createNewNodetoNearest(self,nearestNode,randomNode):
-        DELTA=6
+        DELTA=15
         addedNodeFromSpace=None
         radialDist=self.estDist(nearestNode,randomNode)
         if radialDist<DELTA:
@@ -72,14 +72,18 @@ class Tree:
             phi=math.atan2(math.sqrt(pow(nearestNode.point.posY-randomNode.point.posY,2)
             +pow(nearestNode.point.posX-randomNode.point.posX,2)),
             abs(nearestNode.point.posZ-randomNode.point.posZ))
-            expandTo=Node(Point(int(nearestNode.point.posX+DELTA*math.sin(phi)*math.cos(theta)),
-            int(nearestNode.point.posY+DELTA*math.sin(phi)*math.sin(theta)),
-            int(nearestNode.point.posZ+DELTA*math.cos(phi))))
+            #expandTo=Node(Point(int(nearestNode.point.posX+DELTA*math.sin(phi)*math.cos(theta)),
+            #int(nearestNode.point.posY+DELTA*math.sin(phi)*math.sin(theta)),
+            #int(nearestNode.point.posZ+DELTA*math.cos(phi))))
+            expandTo=Node(Point(nearestNode.point.posX+DELTA*math.sin(phi)*math.cos(theta),
+            nearestNode.point.posY+DELTA*math.sin(phi)*math.sin(theta),
+            nearestNode.point.posZ+DELTA*math.cos(phi)))
+
             addedNodeFromSpace=expandTo
         return addedNodeFromSpace
     
     def expandToRandom(self,expandFrom,randomNode):
-        DELTA=6
+        DELTA=15
         addedNodeFromSpace=None
         radialDist=self.estDist(expandFrom,randomNode)
         if radialDist<DELTA:
@@ -91,9 +95,12 @@ class Tree:
             phi=math.atan2(math.sqrt(pow(expandFrom.point.posY-randomNode.point.posY,2)
             +pow(expandFrom.point.posX-randomNode.point.posX,2)),
             abs(expandFrom.point.posZ-randomNode.point.posZ))
-            expandTo=Node(Point(int(expandFrom.point.posX+DELTA*math.sin(phi)*math.cos(theta)),
-            int(expandFrom.point.posY+DELTA*math.sin(phi)*math.sin(theta)),
-            int(expandFrom.point.posZ+DELTA*math.cos(phi))))
+            #expandTo=Node(Point(int(expandFrom.point.posX+DELTA*math.sin(phi)*math.cos(theta)),
+            #int(expandFrom.point.posY+DELTA*math.sin(phi)*math.sin(theta)),
+            #int(expandFrom.point.posZ+DELTA*math.cos(phi))))
+            expandTo=Node(Point(expandFrom.point.posX+DELTA*math.sin(phi)*math.cos(theta),
+            expandFrom.point.posY+DELTA*math.sin(phi)*math.sin(theta),
+            expandFrom.point.posZ+DELTA*math.cos(phi)))
             self.addNode(expandFrom,expandTo)
             addedNodeFromSpace=expandTo
         return addedNodeFromSpace
@@ -140,9 +147,9 @@ class Space:
         return Node(Point(randomPoint[0],randomPoint[1],randomPoint[2]))
 
     def removeNodeFromSpace(self,node):
-        posX=node.getPos().posX
-        posY=node.getPos().posY
-        posZ=node.getPos().posZ
+        posX=int(node.getPos().posX)
+        posY=int(node.getPos().posY)
+        posZ=int(node.getPos().posZ)
         self.mapDonePoints[(posX,posY,posZ)]=1
         return
 
