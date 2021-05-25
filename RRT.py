@@ -5,6 +5,8 @@ from Geometry import Tree
 from Geometry import Point
 from Geometry import Obstacle
 
+from utils.trajectory_generator import TrajectoryGenerator
+from robots.rrr_robot import RRRRobot
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -110,7 +112,7 @@ def plotEveryThing(space,tree):
         vecZ.append(node.getPos().posZ)
     ax = plt.axes(projection='3d')
     ax.scatter3D(vecX, vecY, vecZ, c=vecZ, cmap='Greens')
-    createSpheres(ax,space.obst)
+    #createSpheres(ax,space.obst)
     plt.plot(space.start[0],space.start[1],space.start[2], color='Red', marker='o', markersize=12)
     plt.plot(space.goal[0],space.goal[1],space.goal[2], color='Red', marker='o', markersize=12)
     plt.show()
@@ -123,7 +125,7 @@ def run(space):
     space.removeNodeFromSpace(rootNode)
     goalNode=Node(Point(space.goal[0],space.goal[1],space.goal[2]))
     iterations=0
-    thresh=6
+    thresh=0.2
     while not checkGoalToTree(tree,goalNode,thresh):
         iterations=iterations+1
         randomNode=generateRandomNode(space)
@@ -136,7 +138,23 @@ def run(space):
         removeNodefromSpace=expandTree(tree,nearestNode,randomNode)
         updateFreeSpace(space,removeNodefromSpace)    
     plotEveryThing(space,tree)
-
+    
+    dq_max = 100
+    ddq_max = 200
+    dx_max = 100
+    ddx_max = 100
+    n = 5
+    cf = 10
+    p_1 = [4, 0.0, 1.0]
+    p_2 = [3, 1, 2]
+    tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
+    ps, dps, ts = tg.generate_lin_trajectory(p_1, p_2, n=n,plot=True)
+    
+    robot=RRRRobot()
+    zs=robot.move_via_points(ps)
+    plt.show()
+ 
 if __name__ == "__main__":
-    space=Space(0,0,0,100,100,100,(1,0,10),(70,60,30),[(10,60,60,60),(10,30,60,30),(10,40,45,20),(10,10,50,25)])
+    space=Space(0,0,0,2,2,2,(1,1,1),(2,2,1.5),[(10,60,60,60)])
     run(space)
+    #[(10,60,60,60),(10,30,60,30),(10,40,50,85),(10,10,50,25)]
