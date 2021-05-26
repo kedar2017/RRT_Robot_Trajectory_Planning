@@ -33,7 +33,7 @@ class RRRRobot(Robot):
             tool frame
     """
 
-    ls = (5,5,5,5)
+    ls = (7,7,7,7)
     qs_lim_deg = ((-360.0, 360.0),
                   (-360.0, 360.0),
                   (-360.0, 360.0))
@@ -56,7 +56,7 @@ class RRRRobot(Robot):
         self.fk_data_path = Path("robots/data/rrr_forward_kinematics.pkl")
         self._precalculate_data()
 
-        self._tp = TransformationPlotter()
+        #self._tp = TransformationPlotter()
 
     def _generate_value_pairs(self):
         """
@@ -138,7 +138,7 @@ class RRRRobot(Robot):
         frames.append(self.T_base * self._numeric_frames[-1])
         frames.append(frames[-1] * self.T_tool)
 
-        self._tp.plot_numeric_frames(frames, axis_len=self.ls[0] / 4)
+        #self._tp.plot_numeric_frames(frames, axis_len=self.ls[0] / 4)
 
     def inverse_kinematics(self, T, m=1, k=1):
         """
@@ -219,11 +219,11 @@ class RRRRobot(Robot):
             T = self.forward_kinematics(q, plot=False)
             Ts.append(T)
         plt.ioff()
-        for T in Ts[:-1]:
-            self._tp.plot_position(T, show=False)
+        #for T in Ts[:-1]:
+        #    self._tp.plot_position(T, show=False)
         self.forward_kinematics(qs[-1], plot=False)
 
-    def move_via_points(self, pts, obstacles):
+    def move_via_points(self, pts):
         """
         Iteratively moves joints via cartesian points using IK
 
@@ -233,13 +233,14 @@ class RRRRobot(Robot):
         Returns:
             np.ndarray: Array of corresponding joint configurations
         """
-        plt.ion()
+        #plt.ion()
         Ts = []
         qs = []
+        jointConfigs = []
         for pt in pts:
-            for T in Ts:
-                self._tp.plot_position(T)
-
+            '''
+            #for T in Ts:
+            #    self._tp.plot_position(T)
             self._tp.ax.scatter(
                 pts[0][0],
                 pts[0][1],
@@ -257,6 +258,7 @@ class RRRRobot(Robot):
                 s=40,
                 alpha=0.6,
             )
+            '''
 
             T_IK = np.array([
                 [1, 0, 0, pt[0]],
@@ -267,13 +269,12 @@ class RRRRobot(Robot):
 
             q = self.inverse_kinematics(T_IK)
             qs.append(q)
-            T=self.forward_kinematics(q,plot=True)
-            if not self.getJointCoordinates(q):
-                return False
-            plt.pause(1e-9)
-            self._tp.ax.cla()
-        plt.ioff()
-        return True
+            jointConfigs.append(self.getJointCoordinates(q))
+            #T=self.forward_kinematics(q,plot=True)
+            #plt.pause(1e-9)
+            #self._tp.ax.cla()
+        #plt.ioff()
+        return jointConfigs
 
     def getJointCoordinates(self, q_values):
 
@@ -299,6 +300,7 @@ class RRRRobot(Robot):
         frames.append(self.T_base * self._numeric_frames[-1])
         frames.append(frames[-1] * self.T_tool)
 
+        joints = []
         for frame in frames:
             vector_extractor = np.array([
                 [0.0, 1, 0.0, 0.0],
@@ -307,5 +309,7 @@ class RRRRobot(Robot):
                 [1.0, 1.0, 1.0, 1.0]
             ])
             vectors = np.dot(np.array(frame), vector_extractor)
-            origin = vectors[:, 0]
-        return True
+            joints.append(vectors[:, 0][:3])
+        joints[:] = joints[1:5]
+        
+        return joints

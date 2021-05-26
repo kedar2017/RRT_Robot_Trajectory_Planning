@@ -1,4 +1,5 @@
 import random
+from re import L
 from Geometry import Space
 from Geometry import Node
 from Geometry import Tree
@@ -102,6 +103,46 @@ def createSpheres(ax,obstacles):
         ax.plot_surface(
         x, y, z,  rstride=1, cstride=1, color='Red', alpha=0.6, linewidth=10)
 
+def checkRobotConfiguration(treeNode,newNode):
+    dq_max = 100
+    ddq_max = 200
+    dx_max = 100
+    ddx_max = 100
+    n = 3
+    cf = 10
+    p_1 = [treeNode.getPos().posX,treeNode.getPos().posY,treeNode.getPos().posZ]
+    p_2 = [newNode.getPos().posX,newNode.getPos().posY,newNode.getPos().posZ]
+    tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
+    ps, dps, ts = tg.generate_lin_trajectory(p_1, p_2, n=n,plot=False)
+    robot = RRRRobot()
+    jointPosToCheck = robot.move_via_points(ps)
+    for i in range(len(jointPosToCheck)):
+        for j in range(len(jointPosToCheck[i])-1):
+            pointA = Point(jointPosToCheck[i][j][0],jointPosToCheck[i][j][1],jointPosToCheck[i][j][2])
+            pointB = Point(jointPosToCheck[i][j+1][0],jointPosToCheck[i][j+1][1],jointPosToCheck[i][j+1][2])
+            if checkPointCollision(space,pointA) or checkPointCollision(space,pointB):
+                print("This configuration is a problem with point A")
+                print(pointA.posX)
+                print(pointA.posY)
+                print(pointA.posZ)
+                print("This configuration is a problem with point B")
+                print(pointB.posX)
+                print(pointB.posY)
+                print(pointB.posZ)
+                return False
+            if checkLineCollision(space,pointA,pointB):
+                print("This LINK is a problem")
+                print("Point A")
+                print(pointA.posX)
+                print(pointA.posY)
+                print(pointA.posZ)
+                print("Point B")
+                print(pointB.posX)
+                print(pointB.posY)
+                print(pointB.posZ)
+                return False
+    return True
+
 def plotEveryThing(space,tree):
     vecX=[]
     vecY=[]
@@ -134,27 +175,15 @@ def run(space):
         removeNodefromSpace=createNewNodeNearest(tree,nearestNode,randomNode)
         if checkLineCollision(space,nearestNode.getPos(),removeNodefromSpace.getPos()):
             continue
+        if not checkRobotConfiguration(nearestNode,removeNodefromSpace):
+            print("Bad robot configuration. Trying next!!")
+            continue
         removeNodefromSpace=expandTree(tree,nearestNode,randomNode)
         updateFreeSpace(space,removeNodefromSpace)
-    plotEveryThing(space,tree)
-    node=removeNodefromSpace
-    while node!=rootNode:
-        dq_max = 100
-        ddq_max = 200
-        dx_max = 100
-        ddx_max = 100
-        n = 2
-        cf = 10
-        p_1 = [node.getPos().posX,node.getPos().posY,node.getPos().posZ]
-        p_2 = [node.parent.getPos().posX,node.parent.getPos().posY,node.parent.getPos().posZ]
-        tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
-        ps, dps, ts = tg.generate_lin_trajectory(p_1, p_2, n=n,plot=False)
-        robot=RRRRobot()
-        zs=robot.move_via_points(ps,space.obst)
-        node=node.parent
-        print("Done with one step. Onto next!!")
+    plotEveryThing(space,tree)        
+    print("Done with one step. Onto next!!")
 
 if __name__ == "__main__":
-    space=Space(0,0,0,10,10,10,(3,0,1),(6,4,2),[(10,60,60,60)])
+    space=Space(0,0,0,10,10,10,(3,4,2),(9,6,4),[(3,60,60,60)])
     run(space)
     #[(10,60,60,60),(10,30,60,30),(10,40,50,85),(10,10,50,25)]
