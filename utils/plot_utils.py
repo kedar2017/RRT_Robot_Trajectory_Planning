@@ -220,7 +220,7 @@ class TransformationPlotter():
             y[:, 0], y[:, 1], y[:, 2], 'g-', linewidth=line_width)
         self.ax.plot3D(
             z[:, 0], z[:, 1], z[:, 2], 'b-', linewidth=line_width)
-
+        
         origin = vectors[:, 0]
         self.ax.scatter(
             origin[0],

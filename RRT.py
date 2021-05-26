@@ -119,13 +119,12 @@ def plotEveryThing(space,tree):
     return 
 
 def run(space):
-
     rootNode=Node(Point(space.start[0],space.start[1],space.start[2]))
     tree=Tree(rootNode)
     space.removeNodeFromSpace(rootNode)
     goalNode=Node(Point(space.goal[0],space.goal[1],space.goal[2]))
     iterations=0
-    thresh=0.2
+    thresh=1
     while not checkGoalToTree(tree,goalNode,thresh):
         iterations=iterations+1
         randomNode=generateRandomNode(space)
@@ -136,25 +135,26 @@ def run(space):
         if checkLineCollision(space,nearestNode.getPos(),removeNodefromSpace.getPos()):
             continue
         removeNodefromSpace=expandTree(tree,nearestNode,randomNode)
-        updateFreeSpace(space,removeNodefromSpace)    
+        updateFreeSpace(space,removeNodefromSpace)
     plotEveryThing(space,tree)
-    
-    dq_max = 100
-    ddq_max = 200
-    dx_max = 100
-    ddx_max = 100
-    n = 5
-    cf = 10
-    p_1 = [4, 0.0, 1.0]
-    p_2 = [3, 1, 2]
-    tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
-    ps, dps, ts = tg.generate_lin_trajectory(p_1, p_2, n=n,plot=True)
-    
-    robot=RRRRobot()
-    zs=robot.move_via_points(ps)
-    plt.show()
- 
+    node=removeNodefromSpace
+    while node!=rootNode:
+        dq_max = 100
+        ddq_max = 200
+        dx_max = 100
+        ddx_max = 100
+        n = 2
+        cf = 10
+        p_1 = [node.getPos().posX,node.getPos().posY,node.getPos().posZ]
+        p_2 = [node.parent.getPos().posX,node.parent.getPos().posY,node.parent.getPos().posZ]
+        tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
+        ps, dps, ts = tg.generate_lin_trajectory(p_1, p_2, n=n,plot=False)
+        robot=RRRRobot()
+        zs=robot.move_via_points(ps,space.obst)
+        node=node.parent
+        print("Done with one step. Onto next!!")
+
 if __name__ == "__main__":
-    space=Space(0,0,0,2,2,2,(1,1,1),(2,2,1.5),[(10,60,60,60)])
+    space=Space(0,0,0,10,10,10,(3,0,1),(6,4,2),[(10,60,60,60)])
     run(space)
     #[(10,60,60,60),(10,30,60,30),(10,40,50,85),(10,10,50,25)]

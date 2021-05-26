@@ -213,23 +213,17 @@ class RRRRobot(Robot):
         Args:
             qs (np.ndarray): nx3 array, where n - is the number of points
         """
-        #plt.ion()
+        plt.ion()
         Ts = []
         for q in qs:
-            #for T in Ts:
-            #    self._tp.plot_position(T)
-
             T = self.forward_kinematics(q, plot=False)
             Ts.append(T)
-
-            #plt.pause(1e-9)
-            #self._tp.ax.cla()
         plt.ioff()
         for T in Ts[:-1]:
             self._tp.plot_position(T, show=False)
         self.forward_kinematics(qs[-1], plot=False)
 
-    def move_via_points(self, pts):
+    def move_via_points(self, pts, obstacles):
         """
         Iteratively moves joints via cartesian points using IK
 
@@ -273,24 +267,18 @@ class RRRRobot(Robot):
 
             q = self.inverse_kinematics(T_IK)
             qs.append(q)
-            self.getJointCoordinates(q)
-            #T = self.forward_kinematics(q, plot=True)
-            #Ts.append(T)
-
-            #plt.pause(1e-9)
-            #self._tp.ax.cla()
+            T=self.forward_kinematics(q,plot=True)
+            if not self.getJointCoordinates(q):
+                return False
+            plt.pause(1e-9)
+            self._tp.ax.cla()
         plt.ioff()
-        #for T in Ts[:-1]:
-        #    self._tp.plot_position(T, show=False)
-        #self.forward_kinematics(q, plot=True)
-
-        return np.array(qs).T
+        return True
 
     def getJointCoordinates(self, q_values):
 
         # Account for the opposite rotation directions and offsets
         #q_values = np.multiply(q_values, self.qs_directions) + self.qs_offsets
-
         qs_dict = {}
         for i in range(len(q_values)):
             qs_dict[sp.symbols(f"q_{i}")] = q_values[i]
@@ -311,33 +299,6 @@ class RRRRobot(Robot):
         frames.append(self.T_base * self._numeric_frames[-1])
         frames.append(frames[-1] * self.T_tool)
 
-        joint_points = []
-        joint_points.append(np.array([[0], [0], [0]]))
-
-        for frame in frames:
-            joint_points.append(frame[:3, 3])
-        joint_points = np.array(joint_points, dtype=float)
-        margin = 1
-        fixed_scale = False
-        center = 0
-        max_range = np.array([
-            joint_points[:, 0, 0].max() - joint_points[:, 0, 0].min(),
-            joint_points[:, 1, 0].max() - joint_points[:, 1, 0].min(),
-            joint_points[:, 2, 0].max() - joint_points[:, 2, 0].min()
-        ]).max() * margin
-
-        mid_x = (joint_points[:, 0, 0].max() + joint_points[:, 0, 0].min()) / 2
-        mid_y = (joint_points[:, 1, 0].max() + joint_points[:, 1, 0].min()) / 2
-        mid_z = (joint_points[:, 2, 0].max() + joint_points[:, 2, 0].min()) / 2
-
-        if fixed_scale:
-            max_range = margin
-            mid_x = mid_y = mid_z = center
-
-        #self._tp.ax.set_xlim(mid_x - max_range, mid_x + max_range)
-        #self._tp.ax.set_ylim(mid_y - max_range, mid_y + max_range)
-        #self._tp.ax.set_zlim(mid_z - max_range, mid_z + max_range)
-
         for frame in frames:
             vector_extractor = np.array([
                 [0.0, 1, 0.0, 0.0],
@@ -347,13 +308,4 @@ class RRRRobot(Robot):
             ])
             vectors = np.dot(np.array(frame), vector_extractor)
             origin = vectors[:, 0]
-            self._tp.ax.scatter(origin[0],origin[1],origin[2],c='Violet',s=40)
-
-        self._tp.ax.plot3D(
-            np.ndarray.flatten(joint_points[:, 0]),
-            np.ndarray.flatten(joint_points[:, 1]),
-            np.ndarray.flatten(joint_points[:, 2]),
-            linewidth=3,
-            c='Black',
-            alpha=0.4
-        )
+        return True

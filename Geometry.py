@@ -61,7 +61,7 @@ class Tree:
         +pow(node.point.posZ-randomNode.point.posZ,2))
     
     def createNewNodetoNearest(self,nearestNode,randomNode):
-        DELTA=0.5
+        DELTA=1
         addedNodeFromSpace=None
         radialDist=self.estDist(nearestNode,randomNode)
         if radialDist<DELTA:
@@ -83,7 +83,7 @@ class Tree:
         return addedNodeFromSpace
     
     def expandToRandom(self,expandFrom,randomNode):
-        DELTA=0.5
+        DELTA=1
         addedNodeFromSpace=None
         radialDist=self.estDist(expandFrom,randomNode)
         if radialDist<DELTA:
