@@ -1,5 +1,7 @@
 import random
 from re import L
+
+from numpy.core.numeric import cross
 from Geometry import Space
 from Geometry import Node
 from Geometry import Tree
@@ -60,6 +62,16 @@ def distCalcSquared(pointA,pointB):
 def dotProduct(vec1,vec2):
     return vec1.posX*vec2.posX+vec1.posY*vec2.posY+vec1.posZ*vec2.posZ
 
+def crossProduct(vec1,vec2):
+    return Point(vec1.posY*vec2.posZ - vec1.posZ*vec2.posY,
+         vec1.posZ*vec2.posX - vec1.posX*vec2.posZ,
+         vec1.posX*vec2.posY - vec1.posY*vec2.posX)
+
+def lambdaCalc(start,end,obstacle):
+    nume = dotProduct(Point(end.posX-obstacle.posX,end.posY-obstacle.posY,end.posZ-obstacle.posZ), Point(end.posX-start.posX,end.posY-start.posY,end.posZ-start.posZ))
+    deno = dotProduct(Point(end.posX-start.posX,end.posY-start.posY,end.posZ-start.posZ),Point(end.posX-start.posX,end.posY-start.posY,end.posZ-start.posZ))
+    return nume/deno
+
 def distToLine(obstacle,start,end):
     distX1X0=distCalcSquared(start,obstacle.center)
     distX2X1=distCalcSquared(end,start)
@@ -68,13 +80,23 @@ def distToLine(obstacle,start,end):
     dotProds=dotProduct(dotProd1,dotProd2)
     nume = distX1X0*distX2X1-pow(dotProds,2)
     deno = distX2X1
-    return math.sqrt(abs(nume/deno))
+    dist = math.sqrt(abs(nume/deno))
+    return dist
 
 def linePassesObstacle(obstacle,start,end):
     if insideObstacle(obstacle,start) or insideObstacle(obstacle,end):
+        print("INSIDE OBSTACLE!!!")
         return True
     if distToLine(obstacle,start,end)<obstacle.radius:
-        return True
+        lambd = lambdaCalc(start,end,obstacle.center)
+        pointOnLine = Point(lambd*start.posX+(1-lambd)*end.posX,lambd*start.posY+(1-lambd)*end.posY,lambd*start.posZ+(1-lambd)*end.posZ)
+        vecComm = Point(pointOnLine.posX-obstacle.center.posX,pointOnLine.posY-obstacle.center.posY,pointOnLine.posZ-obstacle.center.posZ)
+        vecDiffA= Point(start.posX-obstacle.center.posX,start.posY-obstacle.center.posY,start.posZ-obstacle.center.posZ)
+        vecDiffB= Point(end.posX-obstacle.center.posX,end.posY-obstacle.center.posY,end.posZ-obstacle.center.posZ)
+        if dotProduct(crossProduct(vecDiffA,vecComm),crossProduct(vecDiffB,vecComm))>0:
+            return False
+        else:
+            return True 
     return False
 
 def checkLineCollision(space,start,end):
@@ -129,7 +151,7 @@ def checkRobotConfiguration(treeNode,newNode):
                 print(pointB.posX)
                 print(pointB.posY)
                 print(pointB.posZ)
-                return False
+                return True
             if checkLineCollision(space,pointA,pointB):
                 print("This LINK is a problem")
                 print("Point A")
@@ -140,8 +162,15 @@ def checkRobotConfiguration(treeNode,newNode):
                 print(pointB.posX)
                 print(pointB.posY)
                 print(pointB.posZ)
-                return False
-    return True
+                print("How's that possible?")
+                print(space.obst[0].radius)
+                print(space.obst[0].center.posX)
+                print(space.obst[0].center.posY)
+                print(space.obst[0].center.posZ)
+                print(distToLine(space.obst[0],pointA,pointB))
+                print("^^^^")
+                return True
+    return False
 
 def plotEveryThing(space,tree):
     vecX=[]
@@ -153,7 +182,7 @@ def plotEveryThing(space,tree):
         vecZ.append(node.getPos().posZ)
     ax = plt.axes(projection='3d')
     ax.scatter3D(vecX, vecY, vecZ, c=vecZ, cmap='Greens')
-    #createSpheres(ax,space.obst)
+    createSpheres(ax,space.obst)
     plt.plot(space.start[0],space.start[1],space.start[2], color='Red', marker='o', markersize=12)
     plt.plot(space.goal[0],space.goal[1],space.goal[2], color='Red', marker='o', markersize=12)
     plt.show()
@@ -175,15 +204,14 @@ def run(space):
         removeNodefromSpace=createNewNodeNearest(tree,nearestNode,randomNode)
         if checkLineCollision(space,nearestNode.getPos(),removeNodefromSpace.getPos()):
             continue
-        if not checkRobotConfiguration(nearestNode,removeNodefromSpace):
+        if checkRobotConfiguration(nearestNode,removeNodefromSpace):
             print("Bad robot configuration. Trying next!!")
             continue
         removeNodefromSpace=expandTree(tree,nearestNode,randomNode)
         updateFreeSpace(space,removeNodefromSpace)
-    plotEveryThing(space,tree)        
-    print("Done with one step. Onto next!!")
+    plotEveryThing(space,tree)
 
 if __name__ == "__main__":
-    space=Space(0,0,0,10,10,10,(3,4,2),(9,6,4),[(3,60,60,60)])
+    space=Space(0,0,0,10,10,10,(3,4,2),(9,8,8),[(0.5,6,6,4)])
     run(space)
     #[(10,60,60,60),(10,30,60,30),(10,40,50,85),(10,10,50,25)]
