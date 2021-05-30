@@ -172,33 +172,33 @@ def checkRobotConfiguration(treeNode,newNode):
                 return True
     return False
 
-def robotMapper(treeNode,newNode):
+def robotMapper(treeNode,newNode,ax):
+    '''
     dq_max = 100
     ddq_max = 200
     dx_max = 100
     ddx_max = 100
     n = 3
     cf = 10
+    '''
     p_1 = [treeNode.getPos().posX,treeNode.getPos().posY,treeNode.getPos().posZ]
     p_2 = [newNode.getPos().posX,newNode.getPos().posY,newNode.getPos().posZ]
-    tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
-    #ps, dps, ts = tg.generate_lin_trajectory(p_1, p_2, n=n,plot=False)
     ps = [p_1,p_2]
     robot = RRRRobot()
     jointPosToCheck = robot.move_via_points(ps)
     xJoints,yJoints,zJoints=[],[],[]
-    ax = plt.axes(projection='3d')
-    plt.figure(1)
-    for i in range(len(jointPosToCheck)):
-        for j in range(len(jointPosToCheck[i])):
-            xJoints.append(jointPosToCheck[i][j][0])
-            yJoints.append(jointPosToCheck[i][j][1])
-            zJoints.append(jointPosToCheck[i][j][2])
+    ax.set_xlim(0,10)
+    ax.set_ylim(0,10)
+    ax.set_zlim(0,10)
+    for j in range(len(jointPosToCheck[1])):
+        if j<len(jointPosToCheck[1])-1:
+            ax.plot([jointPosToCheck[1][j][0],jointPosToCheck[1][j+1][0]],[jointPosToCheck[1][j][1],jointPosToCheck[1][j+1][1]],[jointPosToCheck[1][j][2],jointPosToCheck[1][j+1][2]], 'Black')
+            
     ax.scatter3D(xJoints, yJoints, zJoints, marker='X')
     plt.pause(0.05)
     return 
 
-def plotEveryThing(space,tree):
+def plotEveryThing(space,tree,ax):
     vecX=[]
     vecY=[]
     vecZ=[]
@@ -206,13 +206,11 @@ def plotEveryThing(space,tree):
         vecX.append(node.getPos().posX)
         vecY.append(node.getPos().posY)
         vecZ.append(node.getPos().posZ)
-    plt.figure(1)
-    ax1 = plt.axes(projection='3d')
-    ax1.scatter3D(vecX, vecY, vecZ, c=vecZ, cmap='Greens')
-    createSpheres(ax1,space.obst)
-    plt.plot(space.start[0],space.start[1],space.start[2], color='Red', marker='o', markersize=12)
-    plt.plot(space.goal[0],space.goal[1],space.goal[2], color='Red', marker='o', markersize=12)
-    plt.show()
+    ax.scatter3D(vecX, vecY, vecZ, c=vecZ, cmap='Greens')
+    createSpheres(ax,space.obst)
+    ax.plot(space.start[0],space.start[1],space.start[2], color='Red', marker='o', markersize=12)
+    ax.plot(space.goal[0],space.goal[1],space.goal[2], color='Red', marker='o', markersize=12)
+    plt.pause(0.05)
     return 
 
 def run(space):
@@ -238,13 +236,14 @@ def run(space):
         updateFreeSpace(space,removeNodefromSpace)
 
     nearestNode=nearestNodeTree(tree,goalNode)
-    plotEveryThing(space,tree)
+    fig= plt.figure()
+    ax=fig.add_subplot(111,projection='3d')
+    plotEveryThing(space,tree,ax)
     while nearestNode!=rootNode:
-        robotMapper(nearestNode,nearestNode.parent)
+        robotMapper(nearestNode,nearestNode.parent,ax)
         nearestNode=nearestNode.parent
-    
+    plt.show()
 
 if __name__ == "__main__":
-    space=Space(0,0,0,10,10,10,(3,4,2),(9,8,8),[(0.5,6,6,4),(0.5,2,4,6)])
+    space=Space(0,0,0,10,10,10,(3,4,2),(6,7,9),[(0.5,6,6,4),(0.5,2,4,6),(0.5,5,6,6)])
     run(space)
-    #[(10,60,60,60),(10,30,60,30),(10,40,50,85),(10,10,50,25)]

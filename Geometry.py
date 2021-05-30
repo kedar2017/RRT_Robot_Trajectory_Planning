@@ -72,9 +72,6 @@ class Tree:
             phi=math.atan2(math.sqrt(pow(nearestNode.point.posY-randomNode.point.posY,2)
             +pow(nearestNode.point.posX-randomNode.point.posX,2)),
             abs(nearestNode.point.posZ-randomNode.point.posZ))
-            #expandTo=Node(Point(int(nearestNode.point.posX+DELTA*math.sin(phi)*math.cos(theta)),
-            #int(nearestNode.point.posY+DELTA*math.sin(phi)*math.sin(theta)),
-            #int(nearestNode.point.posZ+DELTA*math.cos(phi))))
             expandTo=Node(Point(nearestNode.point.posX+DELTA*math.sin(phi)*math.cos(theta),
             nearestNode.point.posY+DELTA*math.sin(phi)*math.sin(theta),
             nearestNode.point.posZ+DELTA*math.cos(phi)))
@@ -95,9 +92,6 @@ class Tree:
             phi=math.atan2(math.sqrt(pow(expandFrom.point.posY-randomNode.point.posY,2)
             +pow(expandFrom.point.posX-randomNode.point.posX,2)),
             abs(expandFrom.point.posZ-randomNode.point.posZ))
-            #expandTo=Node(Point(int(expandFrom.point.posX+DELTA*math.sin(phi)*math.cos(theta)),
-            #int(expandFrom.point.posY+DELTA*math.sin(phi)*math.sin(theta)),
-            #int(expandFrom.point.posZ+DELTA*math.cos(phi))))
             expandTo=Node(Point(expandFrom.point.posX+DELTA*math.sin(phi)*math.cos(theta),
             expandFrom.point.posY+DELTA*math.sin(phi)*math.sin(theta),
             expandFrom.point.posZ+DELTA*math.cos(phi)))
@@ -152,19 +146,3 @@ class Space:
         posZ=int(node.getPos().posZ)
         self.mapDonePoints[(posX,posY,posZ)]=1
         return
-
-
-'''
-    u = np.random.rand()
-    v = np.random.rand()
-    theta = u * 2.0 * np.pi
-    phi = np.arccos(2.0 * v - 1.0)
-    sinTheta = np.sin(theta);
-    cosTheta = np.cos(theta);
-    sinPhi = np.sin(phi);
-    cosPhi = np.cos(phi);
-    rx = a * sinPhi * cosTheta;
-    ry = b * sinPhi * sinTheta;
-    rz = c * cosPhi;
-    return rx, ry, rz
-'''

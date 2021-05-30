@@ -238,28 +238,6 @@ class RRRRobot(Robot):
         qs = []
         jointConfigs = []
         for pt in pts:
-            '''
-            #for T in Ts:
-            #    self._tp.plot_position(T)
-            self._tp.ax.scatter(
-                pts[0][0],
-                pts[0][1],
-                pts[0][2],
-                c='red',
-                s=40,
-                alpha=0.6,
-            )
-
-            self._tp.ax.scatter(
-                pts[-1][0],
-                pts[-1][1],
-                pts[-1][2],
-                c='red',
-                s=40,
-                alpha=0.6,
-            )
-            '''
-
             T_IK = np.array([
                 [1, 0, 0, pt[0]],
                 [0, 1, 0, pt[1]],
@@ -270,16 +248,11 @@ class RRRRobot(Robot):
             q = self.inverse_kinematics(T_IK)
             qs.append(q)
             jointConfigs.append(self.getJointCoordinates(q))
-            #T=self.forward_kinematics(q,plot=True)
-            #plt.pause(1e-9)
-            #self._tp.ax.cla()
-        #plt.ioff()
+
         return jointConfigs
 
     def getJointCoordinates(self, q_values):
 
-        # Account for the opposite rotation directions and offsets
-        #q_values = np.multiply(q_values, self.qs_directions) + self.qs_offsets
         qs_dict = {}
         for i in range(len(q_values)):
             qs_dict[sp.symbols(f"q_{i}")] = q_values[i]
