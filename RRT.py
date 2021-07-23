@@ -85,7 +85,6 @@ def distToLine(obstacle,start,end):
 
 def linePassesObstacle(obstacle,start,end):
     if insideObstacle(obstacle,start) or insideObstacle(obstacle,end):
-        print("INSIDE OBSTACLE!!!")
         return True
     if distToLine(obstacle,start,end)<obstacle.radius:
         lambd = lambdaCalc(start,end,obstacle.center)
@@ -143,6 +142,7 @@ def checkRobotConfiguration(treeNode,newNode):
             pointA = Point(jointPosToCheck[i][j][0],jointPosToCheck[i][j][1],jointPosToCheck[i][j][2])
             pointB = Point(jointPosToCheck[i][j+1][0],jointPosToCheck[i][j+1][1],jointPosToCheck[i][j+1][2])
             if checkPointCollision(space,pointA) or checkPointCollision(space,pointB):
+                '''
                 print("This configuration is a problem with point A")
                 print(pointA.posX)
                 print(pointA.posY)
@@ -151,8 +151,10 @@ def checkRobotConfiguration(treeNode,newNode):
                 print(pointB.posX)
                 print(pointB.posY)
                 print(pointB.posZ)
+                '''
                 return True
             if checkLineCollision(space,pointA,pointB):
+                '''
                 print("This LINK is a problem")
                 print("Point A")
                 print(pointA.posX)
@@ -169,33 +171,28 @@ def checkRobotConfiguration(treeNode,newNode):
                 print(space.obst[0].center.posZ)
                 print(distToLine(space.obst[0],pointA,pointB))
                 print("^^^^")
+                '''
                 return True
     return False
 
-def robotMapper(treeNode,newNode,ax):
-    '''
-    dq_max = 100
-    ddq_max = 200
-    dx_max = 100
-    ddx_max = 100
-    n = 3
-    cf = 10
-    '''
+def robotMapper(treeNode,newNode,ax,tg):
+    
     p_1 = [treeNode.getPos().posX,treeNode.getPos().posY,treeNode.getPos().posZ]
     p_2 = [newNode.getPos().posX,newNode.getPos().posY,newNode.getPos().posZ]
-    ps = [p_1,p_2]
+
+    ps, dxs, ts = tg.generate_lin_trajectory(p_1, p_2, n=8, plot=True)
     robot = RRRRobot()
     jointPosToCheck = robot.move_via_points(ps)
     xJoints,yJoints,zJoints=[],[],[]
     ax.set_xlim(0,10)
     ax.set_ylim(0,10)
     ax.set_zlim(0,10)
-    for j in range(len(jointPosToCheck[1])):
-        if j<len(jointPosToCheck[1])-1:
-            ax.plot([jointPosToCheck[1][j][0],jointPosToCheck[1][j+1][0]],[jointPosToCheck[1][j][1],jointPosToCheck[1][j+1][1]],[jointPosToCheck[1][j][2],jointPosToCheck[1][j+1][2]], 'Black')
-            
+    for k in range(len(jointPosToCheck)):
+        for j in range(len(jointPosToCheck[k])):
+            if j<len(jointPosToCheck[k])-1:
+                ax.plot([jointPosToCheck[k][j][0],jointPosToCheck[k][j+1][0]],[jointPosToCheck[k][j][1],jointPosToCheck[k][j+1][1]],[jointPosToCheck[k][j][2],jointPosToCheck[k][j+1][2]], 'Black')
+        plt.pause(0.01)
     ax.scatter3D(xJoints, yJoints, zJoints, marker='X')
-    plt.pause(0.05)
     return 
 
 def plotEveryThing(space,tree,ax):
@@ -214,6 +211,14 @@ def plotEveryThing(space,tree,ax):
     return 
 
 def run(space):
+    dq_max = 100
+    ddq_max = 200
+    dx_max = 100
+    ddx_max = 100
+    n = 3
+    cf = 10
+    
+    tg = TrajectoryGenerator(dq_max, ddq_max, dx_max, ddx_max, control_freq=cf)
     rootNode=Node(Point(space.start[0],space.start[1],space.start[2]))
     tree=Tree(rootNode)
     space.removeNodeFromSpace(rootNode)
@@ -230,7 +235,6 @@ def run(space):
         if checkLineCollision(space,nearestNode.getPos(),removeNodefromSpace.getPos()):
             continue
         if checkRobotConfiguration(nearestNode,removeNodefromSpace):
-            print("Bad robot configuration. Trying next!!")
             continue
         removeNodefromSpace=expandTree(tree,nearestNode,randomNode)
         updateFreeSpace(space,removeNodefromSpace)
@@ -240,10 +244,10 @@ def run(space):
     ax=fig.add_subplot(111,projection='3d')
     plotEveryThing(space,tree,ax)
     while nearestNode!=rootNode:
-        robotMapper(nearestNode,nearestNode.parent,ax)
+        robotMapper(nearestNode,nearestNode.parent,ax,tg)
         nearestNode=nearestNode.parent
     plt.show()
 
 if __name__ == "__main__":
-    space=Space(0,0,0,10,10,10,(3,4,2),(6,7,9),[(0.5,6,6,4),(0.5,2,4,6),(0.5,5,6,6)])
+    space=Space(0,0,0,10,10,10,(3,3,3),(9,6,8),[(1,6,6,4),(1,2,4,6),(1,5,6,6),(1,5.5,5.5,5.5),(1,3,8,8)])
     run(space)

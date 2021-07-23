@@ -8,12 +8,9 @@ import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
 
-from robots.robot import Robot
 from utils.robo_math import SymbolicTransformation as st
-from utils.plot_utils import TransformationPlotter
 
-
-class RRRRobot(Robot):
+class RRRRobot():
     """
     RRRRobot manipulator Forward Kinematics (FK) and Inverse Kinematics(IK)
     calculator class
@@ -32,6 +29,7 @@ class RRRRobot(Robot):
         T_tool (4x4 array like): Transformation from end-effector frame to the
             tool frame
     """
+    epsilon = 1e-5
 
     ls = (8,8,8,8)
     qs_lim_deg = ((-360.0, 360.0),
@@ -56,8 +54,26 @@ class RRRRobot(Robot):
         self.fk_data_path = Path("robots/data/rrr_forward_kinematics.pkl")
         self._precalculate_data()
 
-        #self._tp = TransformationPlotter()
+    def set_transforms(self, T_base=None, T_tool=None):
+        """
+        Updates base and tool transformations
 
+        Args:
+            T_base (None, optional): Transformation from the world frame
+                to the base frame
+            T_tool (None, optional): Transformation from the end-effector
+                frame to the tool frame
+        """
+        if T_base is None:
+            self.T_base = sp.eye(4)
+        else:
+            self.T_base = sp.Matrix(T_base)
+
+        if T_tool is None:
+            self.T_tool = sp.eye(4)
+        else:
+            self.T_tool = sp.Matrix(T_tool)
+    
     def _generate_value_pairs(self):
         """
         Generates name-value tuples for sympy substitution

@@ -4,8 +4,6 @@ TrajectoryGenerator class definition
 import numpy as np
 import sympy as sp
 
-from utils.polynomial_generator import PolynomialGenerator
-from utils.plot_utils import TrajectoriesPlotter
 from utils.trapezoidal_generator import TrapezoidalGenerator
 
 
@@ -16,57 +14,12 @@ class TrajectoryGenerator():
     """
 
     def __init__(self, dq_max, ddq_max, dx_max, ddx_max, control_freq=0):
-        self._pg = PolynomialGenerator()
         self._tg = TrapezoidalGenerator(dq_max=dq_max, ddq_max=ddq_max)
         self._dq_max = dq_max
         self._ddq_max = ddq_max
         self._dx_max = dx_max
         self._ddx_max = ddx_max
         self._control_freq = control_freq
-
-    def generate_joint_poly_trajectory(self,
-                                       qs_0,
-                                       qs_f,
-                                       t_f,
-                                       t_0=0.0,
-                                       n=100,
-                                       plot=True):
-        """
-        Generates quintic polynomial trajectory profile given desired
-        initial and final conditions
-
-        Args:
-            qs_0 (list of lists of 3 floats): List of initial positions,
-                velocities, accelerations of all joints at time t_0
-            qs_f (list of lists of 3 floats): List of desired positions,
-                velocities, accelerations of all joints at time t_f
-            t_f (float): End time
-            t_0 (float, optional): Start time
-            n (int, optional): Number of points to sample
-            plot (bool, optional): Flag to plot profiles
-
-        Returns:
-            np.ndarray: Array of n joint positions for each joint
-        """
-
-        # Generate polynomial coefficients
-        coefs = []
-        for q_0, q_f in zip(qs_0, qs_f):
-            coefs.append(self._pg.generate_coefficients(q_0, q_f, t_f, t_0))
-
-        # Generate profiles from coefficients
-        qs, dqs, ddqs = [], [], []
-        for c in coefs:
-            qs.append(self._pg.polynomial_from_coefs(c, t_0, t_f, n))
-            if plot:
-                dqs.append(self._pg.dpolynomial_from_coefs(1, c, t_0, t_f, n))
-                ddqs.append(self._pg.dpolynomial_from_coefs(2, c, t_0, t_f, n))
-
-        if plot:
-            ts = np.linspace(t_0, t_f, n)
-            TrajectoriesPlotter.plot_joint(ts, qs, dqs, ddqs)
-
-        return np.array(qs).T
 
     def generate_p2p_trajectory(self, qs_0, qs_f, n=100, plot=False):
         """
@@ -85,9 +38,6 @@ class TrajectoryGenerator():
         self._tg.set_limits(self._dq_max, self._ddq_max)
 
         qs, dqs, ddqs, ts = self._generate_equalized_profiles(qs_0, qs_f, n)
-
-        if plot:
-            TrajectoriesPlotter.plot_joint(ts, qs, dqs, ddqs)
 
         return np.array(qs).T
 
@@ -109,9 +59,6 @@ class TrajectoryGenerator():
         self._tg.set_limits(self._dx_max, self._ddx_max)
 
         xs, dxs, ddxs, ts = self._generate_equalized_profiles(p_0, p_f, n)
-
-        if plot:
-            TrajectoriesPlotter.plot_cartesian(ts, xs, dxs, ddxs)
 
         return np.array(xs).T, np.array(dxs).T, ts
 
@@ -181,9 +128,6 @@ class TrajectoryGenerator():
             dqs.append(np.array(J_inv.evalf(subs=qs_dict) * sp.Matrix(dx),
                                 np.float))
         dqs = np.array(dqs)[:, :, 0].T
-
-        if ts is not None:
-            TrajectoriesPlotter.plot_joint_no_acc(ts, qs, dqs)
 
         return dqs
 
