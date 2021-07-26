@@ -180,19 +180,20 @@ def robotMapper(treeNode,newNode,ax,tg):
     p_1 = [treeNode.getPos().posX,treeNode.getPos().posY,treeNode.getPos().posZ]
     p_2 = [newNode.getPos().posX,newNode.getPos().posY,newNode.getPos().posZ]
 
-    ps, dxs, ts = tg.generate_lin_trajectory(p_1, p_2, n=8, plot=True)
+    ps, dxs, ts = tg.generate_lin_trajectory(p_1, p_2, n=3, plot=True)
     robot = RRRRobot()
     jointPosToCheck = robot.move_via_points(ps)
     xJoints,yJoints,zJoints=[],[],[]
     ax.set_xlim(0,10)
     ax.set_ylim(0,10)
     ax.set_zlim(0,10)
-    for k in range(len(jointPosToCheck)):
-        for j in range(len(jointPosToCheck[k])):
-            if j<len(jointPosToCheck[k])-1:
-                ax.plot([jointPosToCheck[k][j][0],jointPosToCheck[k][j+1][0]],[jointPosToCheck[k][j][1],jointPosToCheck[k][j+1][1]],[jointPosToCheck[k][j][2],jointPosToCheck[k][j+1][2]], 'Black')
-        plt.pause(0.01)
-    ax.scatter3D(xJoints, yJoints, zJoints, marker='X')
+    #for k in range(len(jointPosToCheck)):
+    k=-1
+    for j in range(len(jointPosToCheck[k])):
+        if j<len(jointPosToCheck[k])-1:
+            ax.plot([jointPosToCheck[k][j][0],jointPosToCheck[k][j+1][0]],[jointPosToCheck[k][j][1],jointPosToCheck[k][j+1][1]],[jointPosToCheck[k][j][2],jointPosToCheck[k][j+1][2]], 'dimgrey')
+        ax.scatter([jointPosToCheck[k][j][0]], [jointPosToCheck[k][j][1]], [jointPosToCheck[k][j][2]], marker='X',c="maroon")
+    plt.pause(0.01)
     return 
 
 def plotEveryThing(space,tree,ax):
@@ -203,11 +204,11 @@ def plotEveryThing(space,tree,ax):
         vecX.append(node.getPos().posX)
         vecY.append(node.getPos().posY)
         vecZ.append(node.getPos().posZ)
-    ax.scatter3D(vecX, vecY, vecZ, c=vecZ, cmap='Greens')
+    ax.scatter(vecX, vecY, vecZ, c=vecZ,cmap='Greens')
     createSpheres(ax,space.obst)
-    ax.plot(space.start[0],space.start[1],space.start[2], color='Red', marker='o', markersize=12)
-    ax.plot(space.goal[0],space.goal[1],space.goal[2], color='Red', marker='o', markersize=12)
-    plt.pause(0.05)
+    ax.plot(space.start[0],space.start[1],space.start[2], color='Blue', marker='o', markersize=12)
+    ax.plot(space.goal[0],space.goal[1],space.goal[2], color='Blue', marker='o', markersize=12)
+    #plt.pause(0.05)
     return 
 
 def run(space):
@@ -224,7 +225,10 @@ def run(space):
     space.removeNodeFromSpace(rootNode)
     goalNode=Node(Point(space.goal[0],space.goal[1],space.goal[2]))
     iterations=0
-    thresh=1
+    thresh=1    
+    fig= plt.figure()
+    ax=fig.add_subplot(111,projection='3d')
+
     while not checkGoalToTree(tree,goalNode,thresh):
         iterations=iterations+1
         randomNode=generateRandomNode(space)
@@ -237,14 +241,15 @@ def run(space):
         if checkRobotConfiguration(nearestNode,removeNodefromSpace):
             continue
         removeNodefromSpace=expandTree(tree,nearestNode,randomNode)
+        #plotEveryThing(space,tree,ax)
         updateFreeSpace(space,removeNodefromSpace)
 
     nearestNode=nearestNodeTree(tree,goalNode)
-    fig= plt.figure()
-    ax=fig.add_subplot(111,projection='3d')
     plotEveryThing(space,tree,ax)
     while nearestNode!=rootNode:
+        plotEveryThing(space,tree,ax)
         robotMapper(nearestNode,nearestNode.parent,ax,tg)
+        ax.clear()
         nearestNode=nearestNode.parent
     plt.show()
 
